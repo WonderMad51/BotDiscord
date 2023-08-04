@@ -1,10 +1,15 @@
-const Discord = require("discord.js")
-const loadSlashCommands =("../loaders/loadSlashCommands")
+const { Events } = require('discord.js');
 
-module.exports = async bot => {
-
-    await loadSlashCommands(bot)
-
-    console.log(`${bot.user.tag} est bien en ligne`)
-
+module.exports = {
+    getOnces: () => {
+        return [
+            {
+                name: Events.ClientReady,
+                once: true,
+                handler: (client) => {
+                    console.log('Bot connecté.');
+                }
+            }
+        ];
+    }
 }

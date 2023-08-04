@@ -1,12 +1,13 @@
-const fs = require("fs")
+const fs = require("fs");
 
-module.exports = async bot => {
+module.exports = async commands => (await fs.promises.readdir("./commands"))
+    .filter(filePath => filePath.endsWith(".js"))
+    .reduce((commands, jsFilePath) => {
+        const command = require(`../commands/${jsFilePath}`);
 
-    fs.readdirSync("./commands").filter(f => f.endsWith(".js")).forEach(async file => {
+        commands.set(command.data.name, command);
+        console.log(`Commande "${command.data.name}"" chargée depuis "${jsFilePath}" !`);
 
-        let command = require(`../commands/${file}`)
-        if(!command.name || typeof command.name !== "string") throw new TypeError(`La commande ${file.slice(0, file.lenght - 3)} n'a pas de nom !`)
-        bot.commands.set(command.name, command)
-        console.log(`Commande ${file} chargée avec succès !`)
-    })
-}
+        return commands;
+
+    }, commands);
