@@ -1,20 +1,39 @@
-const Discord = require("discord.js")                   // Importation discord.js doc
+const Discord = require("discord.js");  // Importation discord.js doc
+const config = require("./config");     // Appel du fichier config.js
 
+const CommandLoader = require("./loaders/loadCommands");   // Chargé les fichiers avec lesquels on va travailler
+const EventLoader = require("./loaders/loadEvents");
 
+(async () => {
 
+    // Init Discord bot
+    const bot = new Discord.Client({
+        intents: [Discord.GatewayIntentBits.Guilds]
+    });
 
-const intents = new Discord.IntentsBitField(3276799)    // Donation des droits au bot
-const bot = new Discord.Client({intents}) 
-              // 
-const loadCommands = require("./loaders/loadCommands")   // Chargé les fichiers avec lesquels on va travailler
-const loadEvents = require("./loaders/loadEvents")
-const config = require("./config")                      // Appel du fichier config.js
+    // Register commands
+    bot.commands = await CommandLoader(
+        new Discord.Collection()
+    );
 
-bot.login(config.token)                                 // Importation du token pour connecter le bot
+    // Register events
+    await EventLoader(bot);
 
-bot.commands = new Discord.Collection()
-loadCommands(bot)
-loadEvents(bot)
+    // Login
+    await bot.login(config.token);
 
+    // Init Rest API client
+    const api = new Discord.REST().setToken(config.token);
 
-(async () => 
+    try {
+        const response = await api.put(
+            Discord.Routes.applicationGuildCommands(config.clientId, config.guildId),
+            { body: bot.commands.map(({data}) => data.toJSON())}
+        );
+    }
+    catch (err) {
+        console.error(err);
+        process.exit(0);
+    }
+
+})(...process.argv);
